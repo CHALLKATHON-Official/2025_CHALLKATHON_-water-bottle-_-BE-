@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "History Web Viewer",
+  "version": "1.0",
+  "permissions": ["history", "tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "브라우저 기록 보기"
+  },
+  "options_page": "webpage.html"
+}
