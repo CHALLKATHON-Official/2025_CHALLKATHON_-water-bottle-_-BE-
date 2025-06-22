@@ -1,39 +1,50 @@
 import sys
 import json
-from collections import defaultdict
 from urllib.parse import urlparse
 
-# Step 1: 입력 읽기
-data = sys.stdin.read()
-visit_data = json.loads(data)
-
-# Step 2: 도메인별 방문 수 집계
-domain_count = defaultdict(int)
-for entry in visit_data:
-    full_url = entry.get("url", "")
-    visit_count = entry.get("visitCount", 0)
-
+def extract_domain(url):
     try:
-        parsed = urlparse(full_url)
-        domain = parsed.netloc  # ex: 'example.com', 'www.naver.com'
-        if domain:
-            domain_count[domain] += visit_count
-    except Exception as e:
-        continue  # malformed URL 무시
+        return urlparse(url).netloc.replace("www.", "")
+    except:
+        return "unknown"
 
-# Step 3: 전체 합계 계산
-total_visits = sum(domain_count.values())
+def analyze(data):
+    domain_stats = {}
+    total_visits = 0
+    total_time = 0
 
-# Step 4: 분석 결과 구성
-result = []
-for domain, count in domain_count.items():
-    percent = round(count / total_visits * 100, 2) if total_visits > 0 else 0
-    result.append({
-        "domain": domain,
-        "visitCount": count,
-        "percent": percent
-    })
+    for entry in data:
+        site = entry.get("site", "")
+        count = entry.get("visitCount", 0)
+        dwell = entry.get("dwellTimeMs", 0)
 
-# Step 5: 정렬 후 출력
-result.sort(key=lambda x: x["visitCount"], reverse=True)
-print(json.dumps(result, ensure_ascii=False))
+        domain = extract_domain(site)
+
+        if domain not in domain_stats:
+            domain_stats[domain] = {"visitCount": 0, "timeMsCount": 0}
+
+        domain_stats[domain]["visitCount"] += count
+        domain_stats[domain]["timeMsCount"] += dwell
+
+        total_visits += count
+        total_time += dwell
+
+    result = []
+    for domain, stats in domain_stats.items():
+        visit_count = stats["visitCount"]
+        time_ms = stats["timeMsCount"]
+
+        result.append({
+            "domain": domain,
+            "visitCount": visit_count,
+            "visitPercent": round((visit_count / total_visits) * 100, 2) if total_visits else 0,
+            "timeMsCount": time_ms,
+            "timePercent": round((time_ms / total_time) * 100, 2) if total_time else 0
+        })
+
+    return result
+
+if __name__ == "__main__":
+    data = json.load(sys.stdin)
+    analyzed = analyze(data)
+    print(json.dumps(analyzed, ensure_ascii=False, indent=2))
