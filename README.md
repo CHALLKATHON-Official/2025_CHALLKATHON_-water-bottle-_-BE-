@@ -40,6 +40,7 @@ CurrAnalyze.py
   { "url": "https://example.com/page/2", "visitCount": 2 },
   { "url": "https://another.com", "visitCount": 5 }
 ]
+
 출력 예시
 [
   {
