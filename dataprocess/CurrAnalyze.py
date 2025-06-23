@@ -14,11 +14,11 @@ def analyze(data):
     total_time = 0
 
     for entry in data:
-        site = entry.get("site", "")
+        url = entry.get("url", "")
         count = entry.get("visitCount", 0)
         dwell = entry.get("dwellTimeMs", 0)
 
-        domain = extract_domain(site)
+        domain = extract_domain(url)
 
         if domain not in domain_stats:
             domain_stats[domain] = {"visitCount": 0, "timeMsCount": 0}
