@@ -12,7 +12,7 @@ CurrAnalyze.py
 
 입력 예시
 {
-    "site": "https://example.com/page/1",
+    "url": "https://example.com/page/1",
     "visitCount": 3,
     "dwellTimeMs": 12000
 }
