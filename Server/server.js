@@ -116,5 +116,34 @@ app.get('/api/check/:userId/:period', async (req, res) => {
   }
 });
 
+//기간별 가장 많이 방문한 사이트 API
+app.get('/api/top-sites/:userId/:period', async (req, res) => {
+  const { userId, period } = req.params;
+  const table = periodToTable[period];
+  if (!table) return res.status(400).json({ error: 'Invalid period' });
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT site AS url, visit_count AS visitCount, dwell_time_ms AS dwellTimeMs
+       FROM ${table}
+       WHERE user_id = ?`,
+      [userId]
+    );
+
+    const analyzed = await analyzeDataWithPython(rows);
+
+    const topN = analyzed
+      .sort((a, b) => b.visitCount - a.visitCount)
+      .slice(0, 5); // 👈 상위 5개만
+
+    res.json(topN);
+  } catch (err) {
+    console.error("❌ Top site 분석 오류:", err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
