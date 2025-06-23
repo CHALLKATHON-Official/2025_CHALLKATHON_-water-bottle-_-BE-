@@ -49,6 +49,27 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   }
 });
 
+// 방문 기록 원본 수집
+function collectRawHistory(periodInDays, callback) {
+  const startTime = Date.now() - periodInDays * 24 * 60 * 60 * 1000;
+  chrome.history.search({
+    text: '',
+    startTime: startTime,
+    maxResults: 10000
+  }, (results) => {
+    // results는 HistoryItem 객체 배열
+    callback(results);
+  });
+}
+
+// url과 visitCount만 추출
+function extractUrlVisitCounts(results) {
+  return results.map(item => ({
+    site: item.url,
+    visitCount: item.visitCount || 0
+  }));
+}
+
 // 방문 기록 요약 수집
 function collectHistory(periodInDays, callback) {
   const startTime = Date.now() - periodInDays * 24 * 60 * 60 * 1000;
@@ -105,6 +126,30 @@ function sendSummary(periodInDays) {
       console.log(`📤 ${periodInDays}일 데이터 전송`, payload);
 
       fetch('https://wevself-server.onrender.com/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(console.error);
+    });
+  });
+}
+
+// UrlVis 전송
+function sendRawUrlVisitData(periodInDays) {
+  getOrSetUserId((userId) => {
+    collectRawHistory(periodInDays, (rawResults) => {
+      const UrlVisRaw = extractUrlVisitCounts(rawResults);
+
+      const payload = {
+        userId,
+        period: `${periodInDays}days`,
+        rawVisitData: UrlVisRaw,
+        timestamp: Date.now()
+      };
+
+      console.log(`📤 원본 방문 데이터 전송 (${periodInDays}일)`, payload);
+
+      fetch('https://wevself-server.onrender.com/api/rawHistory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
