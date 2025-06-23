@@ -1,25 +1,61 @@
 const express = require('express');
 const cors = require('cors');
-const db = require('./dbconfig'); // ✅ dbconfig.js에서 DB 연결 가져오기
+const db = require('./dbconfig');
+const { spawn } = require('child_process');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ period에 따른 테이블 이름 매핑
+// ✅ 기간별 테이블 매핑
 const periodToTable = {
   '7days': 'site_summary_7days',
   '30days': 'site_summary_30days',
   '90days': 'site_summary_90days',
 };
 
+// ✅ 파이썬 분석기 연동
+async function analyzeDataWithPython(rawData) {
+  return new Promise((resolve, reject) => {
+    const python = spawn('python', [path.join(__dirname, '../dataprocess/CurrAnalyze.py')]);
+
+    let result = '';
+    let error = '';
+
+    python.stdout.on('data', (data) => {
+      result += data.toString();
+    });
+
+    python.stderr.on('data', (data) => {
+      error += data.toString();
+    });
+
+    python.on('close', (code) => {
+      if (code !== 0) {
+        console.error("❌ Python 오류:", error);
+        return reject(new Error(`Python script exited with code ${code}`));
+      }
+
+      try {
+        const parsed = JSON.parse(result);
+        resolve(parsed);
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    python.stdin.write(JSON.stringify(rawData));
+    python.stdin.end();
+  });
+}
+
+// ✅ 요약 데이터 저장
 app.post('/api/summary', async (req, res) => {
   const { userId, period, summary, timestamp } = req.body;
 
   const table = periodToTable[period];
-  if (!table) {
-    return res.status(400).json({ error: 'Invalid period' });
-  }
+  if (!table) return res.status(400).json({ error: 'Invalid period' });
 
   try {
     for (const item of summary) {
@@ -40,7 +76,7 @@ app.post('/api/summary', async (req, res) => {
   }
 });
 
-// server.js (혹은 routes 파일)
+// ✅ 프론트에서 분석 데이터 요청 시: 분석 결과 반환
 app.get('/api/summary/:userId/:period', async (req, res) => {
   const { userId, period } = req.params;
   const table = periodToTable[period];
@@ -48,15 +84,21 @@ app.get('/api/summary/:userId/:period', async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      `SELECT * FROM ${table} WHERE user_id = ? LIMIT 1`, [userId]
+      `SELECT site AS url, visit_count AS visitCount, dwell_time_ms AS dwellTimeMs
+       FROM ${table}
+       WHERE user_id = ?`,
+      [userId]
     );
-    res.json(rows); // 데이터 없으면 [] 반환됨
+
+    const analyzed = await analyzeDataWithPython(rows); // 🔍 Python 분석
+    res.json(analyzed);
   } catch (err) {
-    console.error(err);
+    console.error("❌ 분석 중 오류:", err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
+// ✅ 익스텐션 설치 여부 체크용 (데이터 존재 확인)
 app.get('/api/check/:userId/:period', async (req, res) => {
   const { userId, period } = req.params;
   const table = periodToTable[period];
@@ -64,15 +106,15 @@ app.get('/api/check/:userId/:period', async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      `SELECT * FROM ${table} WHERE user_id = ? LIMIT 1`, [userId]
+      `SELECT * FROM ${table} WHERE user_id = ? LIMIT 1`,
+      [userId]
     );
-    res.json(rows); // 데이터 없으면 [] 반환됨
+    res.json(rows); // ❗ isExtensionInstalled 판단용
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
