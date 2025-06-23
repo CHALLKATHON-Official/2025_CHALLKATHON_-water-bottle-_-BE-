@@ -134,6 +134,30 @@ function sendSummary(periodInDays) {
   });
 }
 
+// UrlVis 전송
+function sendRawUrlVisitData(periodInDays) {
+  getOrSetUserId((userId) => {
+    collectRawHistory(periodInDays, (rawResults) => {
+      const UrlVisRaw = extractUrlVisitCounts(rawResults);
+
+      const payload = {
+        userId,
+        period: `${periodInDays}days`,
+        rawVisitData: UrlVisRaw,
+        timestamp: Date.now()
+      };
+
+      console.log(`📤 원본 방문 데이터 전송 (${periodInDays}일)`, payload);
+
+      fetch('https://wevself-server.onrender.com/api/rawHistory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(console.error);
+    });
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   // 최초 설치 시 전송
   sendSummary(7);
