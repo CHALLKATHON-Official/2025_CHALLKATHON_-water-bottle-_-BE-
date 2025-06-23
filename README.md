@@ -4,19 +4,20 @@ WebSelf는 사용자의 브라우저 방문 기록을 분석하여, 언제 어�
 
 
 
-# CurrAnalyze.py 설명
+# 데이터처리기 설명
+CurrAnalyze.py
 <details>
 도메인별 웹사이트 방문 시간 통계 분석 스크립트입니다.
 입력된 JSON 데이터를 바탕으로 각 사이트의 방문 횟수와 체류 시간을 도메인 단위로 집계하여 **비율(%)**까지 계산해 줍니다.
 
-입력 형식
+입력 예시
 {
     "site": "https://example.com/page/1",
     "visitCount": 3,
     "dwellTimeMs": 12000
 }
 
-출력 형식
+출력 예시
 {
     "domain": "example.com",
     "visitCount": 3,
@@ -26,7 +27,33 @@ WebSelf는 사용자의 브라우저 방문 기록을 분석하여, 언제 어�
 }
 </details>
 
+CurrAnalyze.py
+<details>
 
+도메인별 총 방문 횟수를 집계
+전체 방문 횟수 중 해당 도메인이 차지하는 비율(visitPercent) 계산
+결과를 JSON 형식으로 출력
+
+입력 예시
+[
+  { "url": "https://example.com/page/1", "visitCount": 3 },
+  { "url": "https://example.com/page/2", "visitCount": 2 },
+  { "url": "https://another.com", "visitCount": 5 }
+]
+출력 예시
+[
+  {
+    "domain": "example.com",
+    "visitCount": 5,
+    "visitPercent": 50.0
+  },
+  {
+    "domain": "another.com",
+    "visitCount": 5,
+    "visitPercent": 50.0
+  }
+]
+</details>
 ---
 
 
