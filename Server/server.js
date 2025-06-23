@@ -40,5 +40,39 @@ app.post('/api/summary', async (req, res) => {
   }
 });
 
+// server.js (혹은 routes 파일)
+app.get('/api/summary/:userId/:period', async (req, res) => {
+  const { userId, period } = req.params;
+  const table = periodToTable[period];
+  if (!table) return res.status(400).json({ error: 'Invalid period' });
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT * FROM ${table} WHERE user_id = ? LIMIT 1`, [userId]
+    );
+    res.json(rows); // 데이터 없으면 [] 반환됨
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/check/:userId/:period', async (req, res) => {
+  const { userId, period } = req.params;
+  const table = periodToTable[period];
+  if (!table) return res.status(400).json({ error: 'Invalid period' });
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT * FROM ${table} WHERE user_id = ? LIMIT 1`, [userId]
+    );
+    res.json(rows); // 데이터 없으면 [] 반환됨
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
