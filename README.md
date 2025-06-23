@@ -27,7 +27,7 @@ CurrAnalyze.py
 }
 </details>
 
-CurrAnalyze.py
+PastAnalyze.py
 <details>
 
 도메인별 총 방문 횟수를 집계
