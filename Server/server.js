@@ -8,14 +8,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ 기간별 테이블 매핑
+// 기간별 테이블 매핑
 const periodToTable = {
   '7days': 'site_summary_7days',
   '30days': 'site_summary_30days',
   '90days': 'site_summary_90days',
 };
 
-// ✅ 파이썬 분석기 연동
+// 파이썬 분석기 연동
 async function analyzeDataWithPython(rawData) {
   return new Promise((resolve, reject) => {
     const python = spawn('python', [path.join(__dirname, '../dataprocess/CurrAnalyze.py')]);
@@ -50,7 +50,7 @@ async function analyzeDataWithPython(rawData) {
   });
 }
 
-// ✅ 요약 데이터 저장
+// 요약 데이터 저장
 app.post('/api/summary', async (req, res) => {
   const { userId, period, summary, timestamp } = req.body;
 
@@ -76,7 +76,7 @@ app.post('/api/summary', async (req, res) => {
   }
 });
 
-// ✅ 프론트에서 분석 데이터 요청 시: 분석 결과 반환
+// 프론트에서 분석 데이터 요청 시: 분석 결과 반환
 app.get('/api/summary/:userId/:period', async (req, res) => {
   const { userId, period } = req.params;
   const table = periodToTable[period];
@@ -98,7 +98,7 @@ app.get('/api/summary/:userId/:period', async (req, res) => {
   }
 });
 
-// ✅ 익스텐션 설치 여부 체크용 (데이터 존재 확인)
+// 익스텐션 설치 여부 체크용 (데이터 존재 확인)
 app.get('/api/check/:userId/:period', async (req, res) => {
   const { userId, period } = req.params;
   const table = periodToTable[period];
