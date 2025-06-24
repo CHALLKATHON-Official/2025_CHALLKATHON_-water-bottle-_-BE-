@@ -21,10 +21,6 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('periodicSummary', { periodInMinutes: 10 });
 });
 
-chrome.runtime.onStartup.addListener(() => {
-  chrome.alarms.create('periodicSummary', { periodInMinutes: 10 });
-});
-
 
 // 탭 체류 시간 측정 → chrome.storage.local에 누적 저장
 function logDwellTime(url, dwellTimeMs) {
@@ -133,8 +129,10 @@ chrome.runtime.onStartup.addListener(() => {
 // 주기적 요약 전송 트리거
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'periodicSummary') {
-    sendSummary(7);
-    sendSummary(30);
-    sendSummary(90);
+    getOrSetUserId((userId) => {
+      sendSummary(7, userId);
+      sendSummary(30, userId);
+      sendSummary(90, userId);
+    });
   }
 });
