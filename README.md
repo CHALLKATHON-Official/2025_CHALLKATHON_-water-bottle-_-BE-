@@ -55,6 +55,51 @@ PastAnalyze.py
   }
 ]
 </details>
+
+DataAnalyze.py
+<details>
+    
+수집한 특정(Top 중 하나) 도메인의 개별 방문기록을 받아서 연/월/일/요일 정보를 분석·출력
+결과를 JSON 형식으로 출력
+    
+입력 예시
+[
+  {
+    "url": "https://www.example.com/page1",
+    "visitTime": 1719200000000
+  },
+  {
+    "url": "https://www.example.com/page2",
+    "visitTime": 1719286400000
+  }
+    ...
+]
+
+출력 예시
+
+[
+  {
+    "date": "2025-06-24",
+    "year": 2025,
+    "month": 6,
+    "day": 24,
+    "weekday": "Tuesday",
+    "hour": 14,
+    "visitCount": 3
+  },
+  {
+    "date": "2025-06-24",
+    "year": 2025,
+    "month": 6,
+    "day": 24,
+    "weekday": "Tuesday",
+    "hour": 15,
+    "visitCount": 1
+  },
+  ...
+]
+
+</details>
 ---
 
 
