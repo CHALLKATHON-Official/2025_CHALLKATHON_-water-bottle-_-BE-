@@ -65,11 +65,9 @@ DataAnalyze.py
 입력 예시
 [
   {
-    "url": "https://www.example.com/page1",
     "visitTime": 1719200000000
   },
   {
-    "url": "https://www.example.com/page2",
     "visitTime": 1719286400000
   }
     ...
