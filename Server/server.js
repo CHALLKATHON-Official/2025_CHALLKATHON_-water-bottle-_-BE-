@@ -225,10 +225,11 @@ app.get('/api/category-summary/:userId/:period', async (req, res) => {
 
 
     for (const row of rows) {
-      const category = classifySite(row.site);
+      const { classifySite } = require('./utils/siteCategory.js');  // 이건 한 번만 위에서 호출하는 게 좋음
+      let category = classifySite(row.site);
+      category = String(category).trim(); // 문자열로 명확히 바꿔줌
       summary[category] = (summary[category] || 0) + Number(row.totalTime);
     }
-
     res.json(summary);
   } catch (err) {
     console.error('❌ 유형별 집계 오류:', err);
