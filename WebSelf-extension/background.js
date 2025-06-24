@@ -6,7 +6,7 @@ let startTime = null;
 function getOrSetUserId(callback) {
   chrome.storage.local.get(['userId'], (res) => {
     if (res.userId) return callback(res.userId);
-    const newId = crypto.randomUUID(); // ❗ 항상 새 UUID 생성
+    const newId = crypto.randomUUID(); // 항상 새 UUID 생성
     chrome.storage.local.set({ userId: newId }, () => callback(newId));
   });
 }
@@ -63,60 +63,74 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // 방문 기록 분석
 function collectHistory(periodInDays, callback) {
   const startTime = Date.now() - periodInDays * 24 * 60 * 60 * 1000;
+
   chrome.history.search({
     text: '',
     startTime: startTime,
     maxResults: 10000
   }, (results) => {
-    const siteStats = {};
+    const siteStatsByDate = {}; // 👈 날짜별 사이트 기록
+
     for (const item of results) {
       const site = new URL(item.url).origin;
-      if (!siteStats[site]) {
-        siteStats[site] = { visitCount: 0, dwellTimeMs: 0 };
+      const dateKey = new Date(item.lastVisitTime).toISOString().slice(0, 10); // yyyy-mm-dd
+
+      if (!siteStatsByDate[dateKey]) siteStatsByDate[dateKey] = {};
+      if (!siteStatsByDate[dateKey][site]) {
+        siteStatsByDate[dateKey][site] = { visitCount: 0, dwellTimeMs: 0 };
       }
-      siteStats[site].visitCount += 1;
+
+      siteStatsByDate[dateKey][site].visitCount += 1;
     }
 
     chrome.storage.local.get(['dwellStats'], (res) => {
       const dwellStats = res.dwellStats || {};
-      const today = new Date();
-      for (let i = 0; i < periodInDays; i++) {
-        const day = new Date(today);
-        day.setDate(today.getDate() - i);
-        const key = day.toISOString().slice(0, 10);
-        const oneDayStats = dwellStats[key] || {};
-        for (const [site, time] of Object.entries(oneDayStats)) {
-          if (!siteStats[site]) {
-            siteStats[site] = { visitCount: 0, dwellTimeMs: 0 };
+
+      for (const [dateKey, stats] of Object.entries(dwellStats)) {
+        if (!siteStatsByDate[dateKey]) siteStatsByDate[dateKey] = {};
+
+        for (const [site, time] of Object.entries(stats)) {
+          if (!siteStatsByDate[dateKey][site]) {
+            siteStatsByDate[dateKey][site] = { visitCount: 0, dwellTimeMs: 0 };
           }
-          siteStats[site].dwellTimeMs += time;
+          siteStatsByDate[dateKey][site].dwellTimeMs += time;
         }
       }
-      callback(siteStats);
+
+      callback(siteStatsByDate); // ✅ 날짜별로 나눠진 데이터 반환
     });
   });
 }
 
+//서버에 JSON형태로 데이터 전송
 function sendSummary(periodInDays, userId) {
-  collectHistory(periodInDays, (siteStats) => {
-    const payload = {
-      userId,
-      period: `${periodInDays}days`,
-      summary: Object.entries(siteStats).map(([site, stats]) => ({
+  collectHistory(periodInDays, (siteStatsByDate) => {
+    const period = `${periodInDays}days`;
+
+    for (const [dateKey, siteMap] of Object.entries(siteStatsByDate)) {
+      const timestamp = new Date(`${dateKey}T00:00:00Z`).getTime(); // 자정 기준 timestamp
+
+      const summary = Object.entries(siteMap).map(([site, stats]) => ({
         site,
         visitCount: stats.visitCount,
         dwellTimeMs: stats.dwellTimeMs
-      })),
-      timestamp: Date.now()
-    };
+      }));
 
-    console.log(`📤 ${periodInDays}일 데이터 전송`, payload);
+      const payload = {
+        userId,
+        period,
+        summary,
+        timestamp
+      };
 
-    fetch('http://localhost:3000/api/summary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(console.error);
+      console.log(`📤 ${period} ${dateKey} 데이터 전송`, payload);
+
+      fetch('http://localhost:3000/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(console.error);
+    }
   });
 }
 
