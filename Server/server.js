@@ -204,5 +204,38 @@ app.get('/api/hourly-activity/:userId/:period', async (req, res) => {
 
 
 
+// server.ts
+app.get('/api/category-summary/:userId/:period', async (req, res) => {
+  const { userId, period } = req.params;
+  const table = periodToTable[period];
+  if (!table) return res.status(400).json({ error: 'Invalid period' });
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT site, SUM(dwell_time_ms) AS totalTime
+       FROM ${table}
+       WHERE user_id = ?
+       GROUP BY site`,
+      [userId]
+    );
+
+    // site 분류
+    const { classifySite } = require('./utils/siteCategory.js');
+    const summary = {};
+
+
+    for (const row of rows) {
+      const category = classifySite(row.site);
+      summary[category] = (summary[category] || 0) + Number(row.totalTime);
+    }
+
+    res.json(summary);
+  } catch (err) {
+    console.error('❌ 유형별 집계 오류:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
