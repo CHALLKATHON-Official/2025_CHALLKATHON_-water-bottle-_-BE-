@@ -69,11 +69,11 @@ function collectHistory(periodInDays, callback) {
     startTime: startTime,
     maxResults: 10000
   }, (results) => {
-    const siteStatsByDate = {}; // 👈 날짜별 사이트 기록
+    const siteStatsByDate = {};
 
     for (const item of results) {
       const site = new URL(item.url).origin;
-      const dateKey = new Date(item.lastVisitTime).toISOString().slice(0, 10); // yyyy-mm-dd
+      const dateKey = new Date(item.lastVisitTime).toISOString().slice(0, 10);
 
       if (!siteStatsByDate[dateKey]) siteStatsByDate[dateKey] = {};
       if (!siteStatsByDate[dateKey][site]) {
@@ -97,30 +97,32 @@ function collectHistory(periodInDays, callback) {
         }
       }
 
-      callback(siteStatsByDate); // ✅ 날짜별로 나눠진 데이터 반환
+      callback(siteStatsByDate, results); // ✅ results 추가로 전달
     });
   });
 }
 
+
 //서버에 JSON형태로 데이터 전송
 function sendSummary(periodInDays, userId) {
-  collectHistory(periodInDays, (siteStatsByDate) => {
+  collectHistory(periodInDays, (siteStatsByDate, results) => {
     const period = `${periodInDays}days`;
 
     for (const [dateKey, siteMap] of Object.entries(siteStatsByDate)) {
-      const timestamp = new Date(`${dateKey}T00:00:00Z`).getTime(); // 자정 기준 timestamp
-
-      const summary = Object.entries(siteMap).map(([site, stats]) => ({
-        site,
-        visitCount: stats.visitCount,
-        dwellTimeMs: stats.dwellTimeMs
-      }));
+      const summary = Object.entries(siteMap).map(([site, stats]) => {
+        const lastVisit = results.find(item => new URL(item.url).origin === site)?.lastVisitTime || Date.now();
+        return {
+          site,
+          visitCount: stats.visitCount,
+          dwellTimeMs: stats.dwellTimeMs,
+          timestamp: lastVisit
+        };
+      });
 
       const payload = {
         userId,
         period,
-        summary,
-        timestamp
+        summary
       };
 
       console.log(`📤 ${period} ${dateKey} 데이터 전송`, payload);
@@ -133,6 +135,8 @@ function sendSummary(periodInDays, userId) {
     }
   });
 }
+
+
 
 
 // 브라우저 재시작 시에도 알람 등록

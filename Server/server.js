@@ -52,14 +52,14 @@ async function analyzeDataWithPython(rawData, pathPy) {
 
 // 요약 데이터 저장
 app.post('/api/summary', async (req, res) => {
-  const { userId, period, summary, timestamp } = req.body;
+  const { userId, period, summary } = req.body;
 
   const table = periodToTable[period];
   if (!table) return res.status(400).json({ error: 'Invalid period' });
 
   try {
     for (const item of summary) {
-      const { site, visitCount, dwellTimeMs } = item;
+      const { site, visitCount, dwellTimeMs, timestamp } = item;
 
       await db.execute(
         `INSERT INTO ${table} (user_id, site, visit_count, dwell_time_ms, timestamp)
@@ -75,6 +75,8 @@ app.post('/api/summary', async (req, res) => {
     res.status(500).send({ status: 'error', message: 'DB 저장 실패' });
   }
 });
+
+
 
 // 프론트에서 분석 데이터 요청 시: 분석 결과 반환
 app.get('/api/summary/:userId/:period', async (req, res) => {
@@ -165,6 +167,40 @@ app.get('/api/activity/:userId/:period', async (req, res) => {
   }
 });
 
+// 📍 GET /api/hourly-activity/:userId/:period
+app.get('/api/hourly-activity/:userId/:period', async (req, res) => {
+  const { userId, period } = req.params;
+  const table = periodToTable[period];
+  if (!table) return res.status(400).json({ error: 'Invalid period' });
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT HOUR(FROM_UNIXTIME(timestamp / 1000)) AS hour,
+              SUM(visit_count) AS totalVisitCount,
+              SUM(dwell_time_ms) AS totalDwellTime
+       FROM ${table}
+       WHERE user_id = ?
+       GROUP BY hour
+       ORDER BY hour`,
+      [userId]
+    );
+
+    // 📌 모든 0~23시가 포함되도록 보정
+    const hourlyStats = Array.from({ length: 24 }, (_, h) => {
+      const found = rows.find(r => r.hour === h);
+      return {
+        hour: h,
+        totalVisitCount: found?.totalVisitCount || 0,
+        totalDwellTime: found?.totalDwellTime || 0,
+      };
+    });
+
+    res.json(hourlyStats);
+  } catch (err) {
+    console.error('❌ 시간대별 활동량 오류:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 
