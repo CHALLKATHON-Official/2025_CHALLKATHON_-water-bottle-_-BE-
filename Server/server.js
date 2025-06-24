@@ -16,9 +16,9 @@ const periodToTable = {
 };
 
 // 파이썬 분석기 연동
-async function analyzeDataWithPython(rawData) {
+async function analyzeDataWithPython(rawData, pathPy) {
   return new Promise((resolve, reject) => {
-    const python = spawn('python', [path.join(__dirname, '../dataprocess/CurrAnalyze.py')]);
+    const python = spawn('python', [path.join(__dirname, pathPy)]);
 
     let result = '';
     let error = '';
@@ -90,7 +90,7 @@ app.get('/api/summary/:userId/:period', async (req, res) => {
       [userId]
     );
 
-    const analyzed = await analyzeDataWithPython(rows); // 🔍 Python 분석
+    const analyzed = await analyzeDataWithPython(rows, '../dataprocess/CurrAnalyze.py'); // 🔍 Python 분석
     res.json(analyzed);
   } catch (err) {
     console.error("❌ 분석 중 오류:", err);
@@ -130,7 +130,7 @@ app.get('/api/top-sites/:userId/:period', async (req, res) => {
       [userId]
     );
 
-    const analyzed = await analyzeDataWithPython(rows);
+    const analyzed = await analyzeDataWithPython(rows, '../dataprocess/CurrAnalyze.py');
 
     const topN = analyzed
       .sort((a, b) => b.visitCount - a.visitCount)
