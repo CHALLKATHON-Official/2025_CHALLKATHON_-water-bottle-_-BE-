@@ -254,6 +254,35 @@ app.get('/api/global-top5', async (req, res) => {
   }
 });
 
+const { classifySite } = require('./utils/siteCategory.js');
+
+app.get('/api/global-category-summary', async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT site, SUM(dwell_time_ms) AS totalTime
+       FROM site_summary_30days
+       GROUP BY site`
+    );
+
+    const categoryTotals = {};
+
+    for (const row of rows) {
+      const category = String(classifySite(row.site)).trim();
+      categoryTotals[category] = (categoryTotals[category] || 0) + Number(row.totalTime);
+    }
+
+    const result = Object.entries(categoryTotals).map(([category, totalTimeMs]) => ({
+      category,
+      totalTimeMs
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ 글로벌 카테고리 요약 오류:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
