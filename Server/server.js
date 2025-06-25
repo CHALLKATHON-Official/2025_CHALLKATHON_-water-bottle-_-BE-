@@ -237,6 +237,23 @@ app.get('/api/category-summary/:userId/:period', async (req, res) => {
   }
 });
 
+// server.js 또는 routes 파일
+app.get('/api/global-top5', async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT site, COUNT(*) as count
+      FROM site_summary_30days
+      GROUP BY site
+      ORDER BY count DESC
+      LIMIT 5
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ 글로벌 TOP5 오류:", err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
