@@ -284,5 +284,39 @@ app.get('/api/global-category-summary', async (req, res) => {
 });
 
 
+app.get('/api/global-visit-ratio', async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT site, COUNT(*) AS visitCount
+      FROM site_summary_30days
+      GROUP BY site
+    `);
+
+    const total = rows.reduce((acc, row) => acc + Number(row.visitCount), 0);
+
+    const result = rows.map(row => {
+      let domain;
+      try {
+        const url = new URL(row.site.startsWith('http') ? row.site : `https://${row.site}`);
+        domain = url.hostname;
+      } catch {
+        domain = row.site;
+      }
+
+      const visitCount = Number(row.visitCount);
+      const visitPercent = +(visitCount / total * 100).toFixed(2);
+
+      return { domain, visitCount, visitPercent };
+    }).sort((a, b) => b.visitPercent - a.visitPercent);
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ 글로벌 비율 분석 오류:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
