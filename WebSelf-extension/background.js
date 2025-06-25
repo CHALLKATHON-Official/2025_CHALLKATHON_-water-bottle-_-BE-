@@ -127,7 +127,7 @@ function sendSummary(periodInDays, userId) {
 
       console.log(`📤 ${period} ${dateKey} 데이터 전송`, payload);
 
-      fetch('http://localhost:3000/api/summary', {
+      fetch('https://webself-be.onrender.com/api/summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
