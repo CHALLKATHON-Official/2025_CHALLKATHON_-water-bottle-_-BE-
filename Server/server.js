@@ -238,14 +238,14 @@ app.get('/api/category-summary/:userId/:period', async (req, res) => {
 });
 
 // server.js 또는 routes 파일
-app.get('/api/global-top5', async (req, res) => {
+app.get('/api/global-top8', async (req, res) => {
   try {
     const [rows] = await db.execute(`
       SELECT site, COUNT(*) as count
       FROM site_summary_30days
       GROUP BY site
       ORDER BY count DESC
-      LIMIT 5
+      LIMIT 8
     `);
     res.json(rows);
   } catch (err) {
