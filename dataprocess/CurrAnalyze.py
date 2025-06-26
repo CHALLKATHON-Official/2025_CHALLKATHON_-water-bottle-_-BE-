@@ -15,8 +15,8 @@ def analyze(data):
 
     for entry in data:
         url = entry.get("url", "")
-        count = entry.get("visitCount", 0)
-        dwell = entry.get("dwellTimeMs", 0)
+        count = int(entry.get("visitCount", 0))
+        dwell = int(float(entry.get("dwellTimeMs", 0)))  # 문자열로 들어올 수도 있으니 int(float()) 처리
 
         domain = extract_domain(url)
 
@@ -33,6 +33,9 @@ def analyze(data):
     for domain, stats in domain_stats.items():
         visit_count = stats["visitCount"]
         time_ms = stats["timeMsCount"]
+
+        if visit_count == 0 and time_ms == 0:
+            continue  # 진짜로 둘 다 0이면 무시
 
         result.append({
             "domain": domain,
