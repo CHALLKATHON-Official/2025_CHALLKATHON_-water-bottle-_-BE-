@@ -261,9 +261,9 @@ app.get('/api/global-category-summary', async (req, res) => {
 app.get('/api/global-visit-ratio', async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT site, COUNT(*) AS totalVisitCount
-       FROM site_summary_30days
-       GROUP BY site`
+      `SELECT site, SUM(visit_count) AS totalVisitCount
+        FROM site_summary_30days
+        GROUP BY site`
     );
 
     const total = rows.reduce((acc, row) => acc + Number(row.totalVisitCount || 0), 0);
