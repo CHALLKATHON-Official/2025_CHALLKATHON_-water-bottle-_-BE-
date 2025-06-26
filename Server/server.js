@@ -278,7 +278,7 @@ app.get('/api/global-visit-ratio', async (req, res) => {
       }
 
       const visitCount = Number(row.visitCount);
-      const visitPercent = +(visitCount / total * 100).toFixed(2);
+      const visitPercent = +(visitCount / total * 100).toFixed(4);
 
       return { domain, visitCount, visitPercent };
     }).sort((a, b) => b.visitPercent - a.visitPercent);
