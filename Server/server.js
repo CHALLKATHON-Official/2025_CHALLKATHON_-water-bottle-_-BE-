@@ -278,6 +278,7 @@ app.get('/api/global-visit-ratio', async (req, res) => {
       }
 
       const visitCount = row.totalVisitCount ? Number(row.totalVisitCount) : 0;
+      console.log(visitCount);
       const visitPercent = total > 0
         ? Number(((visitCount / total) * 100).toFixed(4))
         : 0;
