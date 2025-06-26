@@ -76,10 +76,11 @@ app.get('/api/summary/:userId/:period', async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      `SELECT site AS url, visit_count AS visitCount, dwell_time_ms AS dwellTimeMs
+      `SELECT site AS url, visit_count AS visitcount, dwell_time_ms AS dwelltimems
        FROM ${table} WHERE user_id = $1`,
       [userId]
     );
+    console.log("🔥 분석 전 rows:", rows);
     const analyzed = await analyzeDataWithPython(rows, '../dataprocess/CurrAnalyze.py');
     res.json(analyzed);
   } catch (err) {
