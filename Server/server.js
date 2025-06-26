@@ -120,7 +120,7 @@ app.get('/api/top-sites/:userId/:period', async (req, res) => {
     );
 
     const analyzed = await analyzeDataWithPython(rows, '../dataprocess/CurrAnalyze.py');
-    const topN = analyzed.sort((a, b) => b.visitCount - a.visitCount).slice(0, 5);
+    const topN = analyzed.sort((a, b) => b.visitcount - a.visitcount).slice(0, 5);
     res.json(topN);
   } catch (err) {
     console.error('❌ Top site 오류:', err);
@@ -173,8 +173,8 @@ app.get('/api/hourly-activity/:userId/:period', async (req, res) => {
       const found = rows.find(r => r.hour === h);
       return {
         hour: h,
-        totalVisitCount: found?.totalVisitCount || 0,
-        totalDwellTime: found?.totalDwellTime || 0,
+        totalvisitcount: found?.totalvisitcount || 0,
+        totaldwelltime: found?.totaldwelltime || 0,
       };
     });
 
@@ -203,7 +203,7 @@ app.get('/api/category-summary/:userId/:period', async (req, res) => {
     const summary = {};
     for (const row of rows) {
       const category = String(classifySite(row.site)).trim();
-      summary[category] = (summary[category] || 0) + Number(row.totalTime);
+      summary[category] = (summary[category] || 0) + Number(row.totaltime);
     }
 
     res.json(summary);
@@ -242,7 +242,7 @@ app.get('/api/global-category-summary', async (req, res) => {
     const categoryTotals = {};
     for (const row of rows) {
       const category = String(classifySite(row.site)).trim();
-      categoryTotals[category] = (categoryTotals[category] || 0) + Number(row.totalTime);
+      categoryTotals[category] = (categoryTotals[category] || 0) + Number(row.totaltime);
     }
 
     const result = Object.entries(categoryTotals).map(([category, totalTimeMs]) => ({
