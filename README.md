@@ -4,6 +4,7 @@ WebSelf는 사용자의 브라우저 방문 기록을 분석하여, 언제 어�
 
 github frontend part: https://github.com/CHALLKATHON-Official/2025_CHALLKATHON_-water-bottle-_-FE-
 
+---
 
 # 데이터처리기 설명
 CurrAnalyze.py
