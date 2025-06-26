@@ -142,19 +142,48 @@ app.get('/api/top-sites/:userId/:period', async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      `SELECT site AS url, visit_count AS visitCount, dwell_time_ms AS dwellTimeMs
+      `SELECT site AS url, visit_count AS visitCount
        FROM ${table} WHERE user_id = $1`,
       [userId]
     );
 
-    const analyzed = await analyzeDataWithPython(rows, '../dataprocess/CurrAnalyze.py');
-    const topN = analyzed.sort((a, b) => b.visitcount - a.visitcount).slice(0, 5);
-    res.json(topN);
+    const domainStats = {};
+    let totalVisit = 0;
+
+    for (const row of rows) {
+      let domain;
+      try {
+        const urlObj = new URL(row.url.startsWith('http') ? row.url : `https://${row.url}`);
+        domain = urlObj.hostname.replace('www.', '');
+      } catch {
+        domain = 'unknown';
+      }
+
+      const count = Number(row.visitcount) || 0;
+      totalVisit += count;
+
+      if (!domainStats[domain]) {
+        domainStats[domain] = 0;
+      }
+      domainStats[domain] += count;
+    }
+
+    const result = Object.entries(domainStats)
+      .map(([domain, visitCount]) => ({
+        domain,
+        visitCount,
+        visitPercent: totalVisit > 0 ? Number(((visitCount / totalVisit) * 100).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => b.visitCount - a.visitCount)
+      .slice(0, 5);
+
+    res.json(result);
   } catch (err) {
     console.error('❌ Top site 오류:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // 날짜별 변화
 app.get('/api/activity/:userId/:period', async (req, res) => {
