@@ -266,7 +266,7 @@ app.get('/api/global-visit-ratio', async (req, res) => {
         GROUP BY site`
     );
 
-    const total = rows.reduce((acc, row) => acc + Number(row.totalVisitCount || 0), 0);
+    const total = rows.reduce((acc, row) => acc + Number(row.totalvisitcount || 0), 0);
 
     const result = rows.map(row => {
       let domain;
@@ -277,8 +277,7 @@ app.get('/api/global-visit-ratio', async (req, res) => {
         domain = row.site;
       }
 
-      const visitCount = row.totalVisitCount ? Number(row.totalVisitCount) : 0;
-      console.log(visitCount);
+      const visitCount = row.totalvisitcount ? Number(row.totalvisitcount) : 0;
       const visitPercent = total > 0
         ? Number(((visitCount / total) * 100).toFixed(4))
         : 0;
