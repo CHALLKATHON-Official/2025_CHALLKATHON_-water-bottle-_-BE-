@@ -15,8 +15,8 @@ def analyze(data):
 
     for entry in data:
         url = entry.get("url", "")
-        count = entry.get("visitCount", 0)
-        dwell = entry.get("dwellTimeMs", 0)
+        count = int(entry.get("visitCount", 0) or 0)
+        dwell = int(entry.get("dwellTimeMs", 0) or 0)
 
         domain = extract_domain(url)
 
