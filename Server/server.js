@@ -261,12 +261,12 @@ app.get('/api/global-category-summary', async (req, res) => {
 app.get('/api/global-visit-ratio', async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT site, COUNT(*) AS visitCount
+      `SELECT site, COUNT(*)::int AS visitCount
        FROM site_summary_30days
        GROUP BY site`
     );
 
-    const total = rows.reduce((acc, row) => acc + Number(row.visitCount), 0);
+    const total = rows.reduce((acc, row) => acc + Number(row.visitCount || 0), 0);
 
     const result = rows.map(row => {
       let domain;
@@ -277,8 +277,10 @@ app.get('/api/global-visit-ratio', async (req, res) => {
         domain = row.site;
       }
 
-      const visitCount = Number(row.visitCount);
-      const visitPercent = +(visitCount / total * 100).toFixed(4);
+      const visitCount = row.visitCount ? Number(row.visitCount) : 0;
+      const visitPercent = total > 0
+        ? Number(((visitCount / total) * 100).toFixed(4))
+        : 0;
 
       return { domain, visitCount, visitPercent };
     }).sort((a, b) => b.visitPercent - a.visitPercent);
@@ -289,6 +291,7 @@ app.get('/api/global-visit-ratio', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ 서버 실행 중 on port ${PORT}`));
