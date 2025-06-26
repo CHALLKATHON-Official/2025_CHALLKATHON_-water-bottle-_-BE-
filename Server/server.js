@@ -216,13 +216,13 @@ app.get('/api/hourly-activity/:userId/:period', async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      `SELECT EXTRACT(HOUR FROM to_timestamp(timestamp / 1000))::int AS hour,
+      `SELECT EXTRACT(HOUR FROM to_timestamp(timestamp / 1000) AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::int AS hour,
               SUM(visit_count) AS totalVisitCount,
               SUM(dwell_time_ms) AS totalDwellTime
-       FROM ${table}
-       WHERE user_id = $1
-       GROUP BY hour
-       ORDER BY hour`,
+      FROM ${table}
+      WHERE user_id = $1
+      GROUP BY hour
+      ORDER BY hour`,
       [userId]
     );
 
