@@ -230,8 +230,8 @@ app.get('/api/hourly-activity/:userId/:period', async (req, res) => {
       const found = rows.find(r => r.hour === h);
       return {
         hour: h,
-        totalvisitcount: found?.totalvisitcount || 0,
-        totaldwelltime: found?.totaldwelltime || 0,
+        totalVisitCount: found?.totalvisitcount || 0,
+        totalDwellTime: found?.totaldwelltime || 0,
       };
     });
 
