@@ -76,18 +76,45 @@ app.get('/api/summary/:userId/:period', async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      `SELECT site AS url, visit_count AS visitcount, dwell_time_ms AS dwelltimems
+      `SELECT site AS url, visit_count AS visitcount
        FROM ${table} WHERE user_id = $1`,
       [userId]
     );
-    console.log("🔥 분석 전 rows:", rows);
-    const analyzed = await analyzeDataWithPython(rows, '../dataprocess/CurrAnalyze.py');
-    res.json(analyzed);
+
+    const domainStats = {};
+    let totalVisit = 0;
+
+    for (const row of rows) {
+      let domain;
+      try {
+        const urlObj = new URL(row.url.startsWith('http') ? row.url : `https://${row.url}`);
+        domain = urlObj.hostname.replace('www.', '');
+      } catch {
+        domain = 'unknown';
+      }
+
+      const count = Number(row.visitcount) || 0;
+      totalVisit += count;
+
+      if (!domainStats[domain]) {
+        domainStats[domain] = 0;
+      }
+      domainStats[domain] += count;
+    }
+
+    const result = Object.entries(domainStats).map(([domain, visitCount]) => ({
+      domain,
+      visitCount,
+      visitPercent: totalVisit > 0 ? Number(((visitCount / totalVisit) * 100).toFixed(2)) : 0
+    }));
+
+    res.json(result);
   } catch (err) {
     console.error('❌ 분석 오류:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // 데이터 존재 여부 확인
 app.get('/api/check/:userId/:period', async (req, res) => {
