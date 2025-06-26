@@ -11,35 +11,28 @@ def extract_domain(url):
 def analyze(data):
     domain_stats = {}
     total_visits = 0
-    total_time = 0
 
     for entry in data:
         url = entry.get("url", "")
         count = int(entry.get("visitCount", 0) or 0)
-        dwell = int(entry.get("dwellTimeMs", 0) or 0)
+
+        if count == 0:
+            continue  # 방문 횟수가 0이면 제외
 
         domain = extract_domain(url)
 
         if domain not in domain_stats:
-            domain_stats[domain] = {"visitCount": 0, "timeMsCount": 0}
+            domain_stats[domain] = 0
 
-        domain_stats[domain]["visitCount"] += count
-        domain_stats[domain]["timeMsCount"] += dwell
-
+        domain_stats[domain] += count
         total_visits += count
-        total_time += dwell
 
     result = []
-    for domain, stats in domain_stats.items():
-        visit_count = stats["visitCount"]
-        time_ms = stats["timeMsCount"]
-
+    for domain, count in domain_stats.items():
         result.append({
             "domain": domain,
-            "visitCount": visit_count,
-            "visitPercent": round((visit_count / total_visits) * 100, 2) if total_visits else 0,
-            "timeMsCount": time_ms,
-            "timePercent": round((time_ms / total_time) * 100, 2) if total_time else 0
+            "visitCount": count,
+            "visitPercent": round((count / total_visits) * 100, 2) if total_visits else 0
         })
 
     return result
