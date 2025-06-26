@@ -2,6 +2,7 @@
 WebSelf는 사용자의 브라우저 방문 기록을 분석하여, 언제 어떤 사이트에 얼마나 자주 접속했는지 웹에서의 시간 사용 습관을 시각화해주는 웹 서비스입니다.
 회원가입 없이 쿠키 기반으로 개인 분석을 진행하며, 전 세계 다른 사용자들의 사용 패턴도 함께 비교할 수 있습니다.
 
+github frontend part: https://github.com/CHALLKATHON-Official/2025_CHALLKATHON_-water-bottle-_-FE-
 
 
 # 데이터처리기 설명
