@@ -56,7 +56,7 @@ app.post('/api/summary', async (req, res) => {
       await db.query(
         `INSERT INTO ${table} (user_id, site, visit_count, dwell_time_ms, timestamp)
          VALUES ($1, $2, $3, $4, $5)`,
-        [userId, site, visitCount, dwellTimeMs, timestamp]
+        [userId, site, visitCount, dwellTimeMs, Math.floor(timestamp)]
       );
     }
 
