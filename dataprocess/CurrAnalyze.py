@@ -16,7 +16,7 @@ def analyze(data):
     for entry in data:
         url = entry.get("url", "")
         count = int(entry.get("visitCount", 0))
-        dwell = int(float(entry.get("dwellTimeMs", 0)))  # 문자열로 들어올 수도 있으니 int(float()) 처리
+        dwell = int(entry.get("dwellTimeMs", 0))
 
         domain = extract_domain(url)
 
@@ -34,18 +34,18 @@ def analyze(data):
         visit_count = stats["visitCount"]
         time_ms = stats["timeMsCount"]
 
-        if visit_count == 0 and time_ms == 0:
-            continue  # 진짜로 둘 다 0이면 무시
-
-        result.append({
-            "domain": domain,
-            "visitCount": visit_count,
-            "visitPercent": round((visit_count / total_visits) * 100, 2) if total_visits else 0,
-            "timeMsCount": time_ms,
-            "timePercent": round((time_ms / total_time) * 100, 2) if total_time else 0
-        })
+        # ✅ 적어도 하나는 0 이상일 때만 포함
+        if visit_count > 0 or time_ms > 0:
+            result.append({
+                "domain": domain,
+                "visitCount": visit_count,
+                "visitPercent": round((visit_count / total_visits) * 100, 2) if total_visits else 0,
+                "timeMsCount": time_ms,
+                "timePercent": round((time_ms / total_time) * 100, 2) if total_time else 0
+            })
 
     return result
+
 
 if __name__ == "__main__":
     data = json.load(sys.stdin)
