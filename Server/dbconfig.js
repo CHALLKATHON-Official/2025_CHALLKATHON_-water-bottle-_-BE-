@@ -11,6 +11,7 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false,   // Supabase에선 꼭 필요
   },
+  family: 4 // ✅ IPv4로 연결
 });
 
 module.exports = pool;
